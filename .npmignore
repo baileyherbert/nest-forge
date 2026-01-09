@@ -9,4 +9,7 @@ test
 .editorconfig
 .eslintrc
 .gitattributes
+.prettierrc
+.prettierignore
 tsconfig.build.json
+eslint.config.mjs
