@@ -79,6 +79,11 @@ export abstract class ForgeExtension {
 	public configureRootModule(consumer: MiddlewareConsumer): any {}
 
 	/**
+	 * Runs after all services in the application have booted.
+	 */
+	public afterBoot(app: INestApplicationContext): any {}
+
+	/**
 	 * Instruments the application context. If a value is returned, the instance is replaced with that value, and no further extensions are
 	 * queried.
 	 */

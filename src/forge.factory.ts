@@ -3,6 +3,7 @@ import {
 	ForwardReference,
 	Global,
 	INestApplication,
+	INestApplicationContext,
 	MiddlewareConsumer,
 	Module,
 	ModuleMetadata,
@@ -11,8 +12,15 @@ import {
 } from '@nestjs/common';
 import { ForgeApplicationContextOptions, ForgeApplicationOptions, ForgeMicroserviceOptions } from './forge-options.interface';
 import { ForgeExtension, ForgeExtensionResolvable } from './extensions';
-import { AbstractHttpAdapter, ModuleRef, NestFactory } from '@nestjs/core';
-import { FORGE_FIELD_MODULE_REF, FORGE_ROOT_MODULE, FORGE_TOKEN_ROOT_MODULE } from './constants';
+import { AbstractHttpAdapter, ModuleRef, NestApplication, NestApplicationContext, NestFactory } from '@nestjs/core';
+import {
+	FORGE_FIELD_MODULE_REF,
+	FORGE_PATCH_BOOT_CALLBACK,
+	FORGE_PATCH_ENABLE_INIT,
+	FORGE_PATCHED,
+	FORGE_ROOT_MODULE,
+	FORGE_TOKEN_ROOT_MODULE,
+} from './constants';
 import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from './architecture';
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
@@ -72,6 +80,9 @@ class Forge {
 			createArgs.splice(1, 0, adapter);
 		}
 
+		this._augmentBootHooks(createOptions, extensions);
+		this._augmentNestApplication();
+
 		const app = await NestFactory.create.apply(NestFactory, createArgs as any);
 
 		await this.augmentComponents(instrument.instances, extensions);
@@ -103,6 +114,11 @@ class Forge {
 			}
 		}
 
+		createOptions[FORGE_PATCH_ENABLE_INIT] = false;
+
+		this._augmentBootHooks(createOptions, extensions);
+		this._augmentNestApplication();
+
 		const app = await NestFactory.createApplicationContext(root, createOptions);
 
 		await this.augmentComponents(instrument.instances, extensions);
@@ -110,6 +126,9 @@ class Forge {
 		for (const extension of extensions) {
 			await extension.configureStandaloneApplication(app);
 		}
+
+		createOptions[FORGE_PATCH_ENABLE_INIT] = true;
+		await app.init();
 
 		return app;
 	}
@@ -133,6 +152,9 @@ class Forge {
 				createOptions = newOptions as NestMicroserviceOptions & T;
 			}
 		}
+
+		this._augmentBootHooks(createOptions, extensions);
+		this._augmentNestApplication();
 
 		const app = await NestFactory.createMicroservice<T>(root, createOptions);
 
@@ -243,7 +265,7 @@ class Forge {
 
 		return {
 			instances,
-			instanceDecorator: async (instance) => {
+			instanceDecorator: (instance) => {
 				if (this._isRootModule(instance)) {
 					// TODO
 				}
@@ -253,7 +275,7 @@ class Forge {
 				}
 
 				for (const extension of extensions) {
-					const response = await extension.instrument(instance);
+					const response = extension.instrument(instance);
 
 					if (response !== undefined) {
 						return response;
@@ -317,6 +339,44 @@ class Forge {
 
 	protected _isHttpAdapter(instance: unknown): instance is AbstractHttpAdapter {
 		return typeof instance === 'object' && instance !== null && typeof instance['use'] === 'function';
+	}
+
+	protected _augmentBootHooks(createOptions: object, extensions: ForgeExtension[]) {
+		createOptions[FORGE_PATCH_BOOT_CALLBACK] = async (app: INestApplicationContext) => {
+			try {
+				await Promise.all(extensions.map((e) => e.afterBoot(app)));
+			} catch (error) {
+				console.error(error);
+			}
+		};
+	}
+
+	protected _augmentNestApplication() {
+		const application = NestApplicationContext as any;
+		const originalBootstrapHook = application.prototype.callBootstrapHook;
+		const originalInit = application.prototype.init;
+
+		if (application.prototype[FORGE_PATCHED]) {
+			return;
+		}
+
+		application.prototype[FORGE_PATCHED] = true;
+
+		application.prototype.callBootstrapHook = async function (this: NestApplicationContext) {
+			await originalBootstrapHook.call(this);
+
+			if (this.appOptions[FORGE_PATCH_BOOT_CALLBACK]) {
+				await this.appOptions[FORGE_PATCH_BOOT_CALLBACK](this);
+			}
+		};
+
+		application.prototype.init = async function (this: NestApplicationContext) {
+			if (this.appOptions[FORGE_PATCH_ENABLE_INIT] === false) {
+				return this;
+			}
+
+			return originalInit.call(this);
+		};
 	}
 }
 
