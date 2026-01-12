@@ -343,11 +343,7 @@ class Forge {
 
 	protected _augmentBootHooks(createOptions: object, extensions: ForgeExtension[]) {
 		createOptions[FORGE_PATCH_BOOT_CALLBACK] = async (app: INestApplicationContext) => {
-			try {
-				await Promise.all(extensions.map((e) => e.afterBoot(app)));
-			} catch (error) {
-				console.error(error);
-			}
+			await Promise.all(extensions.map((e) => e.afterBoot(app)));
 		};
 	}
 
