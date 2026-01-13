@@ -7,16 +7,20 @@
 		"watch": "rimraf dist && tsc -w -p tsconfig.json",
 		"format": "prettier --write \"{src,apps,libs,test}/**/*.ts\""
 	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"directories": {
 		"lib": "src"
 	},
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
+	"files": [
+		"dist",
+		"tsconfig.json"
+	],
 	"keywords": [],
 	"license": "UNLICENSED",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/baileyherbert/nest-forge"
+		"url": "git+https://github.com/baileyherbert/nest-forge.git"
 	},
 	"bugs": {
 		"url": "https://github.com/baileyherbert/nest-forge/issues"
