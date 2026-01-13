@@ -1,0 +1,44 @@
+name: Release - Publish to npm
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up nodejs
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm --ignore-scripts ci
+
+      - name: Parse release version
+        id: parse_version
+        uses: baileyherbert/version-action@v3
+
+      - name: Update package versions
+        env:
+          RELEASE_VERSION: ${{ steps.parse_version.outputs.version-without-v }}
+        run: node scripts/release-set-versions.mjs
+
+      - name: Build all workspaces
+        run: npm run --workspaces --if-present build
+
+      - name: Publish packages
+        env:
+          RELEASE_VERSION: ${{ steps.parse_version.outputs.version-without-v }}
+          NPM_ACCESS_FLAG: "--access public"
+        run: bash ./scripts/publish-workspaces.sh
