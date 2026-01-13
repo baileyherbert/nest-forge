@@ -1,15 +1,8 @@
-import {
-	INestApplication,
-	INestApplicationContext,
-	INestMicroservice,
-	MiddlewareConsumer,
-	ModuleMetadata,
-	NestApplicationOptions,
-} from '@nestjs/common';
+import { INestApplicationContext, INestMicroservice, MiddlewareConsumer, ModuleMetadata, NestApplicationOptions } from '@nestjs/common';
 import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from '../architecture';
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
-import { AbstractHttpAdapter } from '@nestjs/core';
+import { AbstractHttpAdapter, NestApplication } from '@nestjs/core';
 
 export abstract class ForgeExtension {
 	/**
@@ -24,7 +17,7 @@ export abstract class ForgeExtension {
 	/**
 	 * Configures a Nest application instance.
 	 */
-	public configureHttpApplication(application: INestApplication): any {}
+	public configureHttpApplication(application: NestApplication): any {}
 
 	/**
 	 * Configures the options object for a Nest application instance.

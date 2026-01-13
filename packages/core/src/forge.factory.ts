@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ForgeApplicationContextOptions, ForgeApplicationOptions, ForgeMicroserviceOptions } from './forge-options.interface';
 import { ForgeExtension, ForgeExtensionResolvable } from './extensions';
-import { AbstractHttpAdapter, ModuleRef, NestApplicationContext, NestFactory } from '@nestjs/core';
+import { AbstractHttpAdapter, ModuleRef, NestApplication, NestApplicationContext, NestFactory } from '@nestjs/core';
 import {
 	FORGE_FIELD_MODULE_REF,
 	FORGE_PATCH_BOOT_CALLBACK,
@@ -28,18 +28,18 @@ import { FORGE_APP_OPTIONS, FORGE_ROOT_MODULE } from './constants-public';
 class Forge {
 	private _augmented = new Set<ForgeBaseComponent>();
 
-	public async create<T extends INestApplication = INestApplication>(
+	public async create<T extends INestApplication = NestApplication>(
 		appModule: IEntryNestModule,
 		options?: ForgeApplicationOptions
 	): Promise<T>;
 
-	public async create<T extends INestApplication = INestApplication>(
+	public async create<T extends INestApplication = NestApplication>(
 		appModule: IEntryNestModule,
 		httpAdapter: AbstractHttpAdapter,
 		options?: ForgeApplicationOptions
 	): Promise<T>;
 
-	public async create<T extends INestApplication = INestApplication>(
+	public async create<T extends INestApplication = NestApplication>(
 		appModule: IEntryNestModule,
 		optionsOrHttpAdapter?: ForgeApplicationOptions | AbstractHttpAdapter,
 		optionsFallback?: ForgeApplicationOptions
@@ -88,7 +88,7 @@ class Forge {
 		await this.augmentComponents(instrument.instances, extensions);
 
 		for (const extension of extensions) {
-			await extension.configureHttpApplication(app);
+			await extension.configureHttpApplication(app as NestApplication);
 		}
 
 		return app as T;
