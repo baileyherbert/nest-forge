@@ -23,4 +23,4 @@ jobs:
         run: npm --ignore-scripts ci
 
       - name: Build all workspaces
-        run: npm run -ws --if-present build
+        run: npm run --workspaces --if-present build
