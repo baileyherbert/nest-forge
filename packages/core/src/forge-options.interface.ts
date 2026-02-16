@@ -1,4 +1,4 @@
-import { NestApplicationOptions } from '@nestjs/common';
+import { ModuleMetadata, NestApplicationOptions } from '@nestjs/common';
 import { ForgeExtensionResolvable } from './extensions';
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
@@ -12,5 +12,9 @@ export interface ForgeApplicationContextOptions extends NestApplicationContextOp
 }
 
 export interface ForgeMicroserviceOptions extends NestMicroserviceOptions {
+	extensions?: ForgeExtensionResolvable | ForgeExtensionResolvable[];
+}
+
+export interface ForgeTestModuleOptions extends ModuleMetadata {
 	extensions?: ForgeExtensionResolvable | ForgeExtensionResolvable[];
 }

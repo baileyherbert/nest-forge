@@ -10,13 +10,19 @@ import {
 	NestApplicationOptions,
 	Type,
 } from '@nestjs/common';
-import { ForgeApplicationContextOptions, ForgeApplicationOptions, ForgeMicroserviceOptions } from './forge-options.interface';
+import {
+	ForgeApplicationContextOptions,
+	ForgeApplicationOptions,
+	ForgeMicroserviceOptions,
+	ForgeTestModuleOptions,
+} from './forge-options.interface';
 import { ForgeExtension, ForgeExtensionResolvable } from './extensions';
-import { AbstractHttpAdapter, ModuleRef, NestApplicationContext, NestFactory } from '@nestjs/core';
+import { AbstractHttpAdapter, GraphInspector, ModuleRef, NestApplicationContext, NestFactory } from '@nestjs/core';
 import {
 	FORGE_FIELD_MODULE_REF,
 	FORGE_PATCH_BOOT_CALLBACK,
 	FORGE_PATCH_ENABLE_INIT,
+	FORGE_PATCH_INSTRUMENT,
 	FORGE_PATCHED,
 	FORGE_TOKEN_ROOT_MODULE,
 } from './constants';
@@ -24,6 +30,9 @@ import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from '
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
 import { FORGE_APP_OPTIONS, FORGE_ROOT_MODULE } from './constants-public';
+import { Test, TestingModuleBuilder, TestingModuleOptions } from '@nestjs/testing';
+import { TestingInjector } from '@nestjs/testing/testing-injector';
+import { TestingInstanceLoader } from '@nestjs/testing/testing-instance-loader';
 
 class Forge {
 	private _augmented = new Set<ForgeBaseComponent>();
@@ -51,7 +60,7 @@ class Forge {
 			{};
 
 		const extensions = this.discoverExtensions(options?.extensions ?? []);
-		const root = await this.createRootModule(appModule, extensions, options);
+		const root = await this.createRootModule({ imports: [appModule as any] }, extensions, options);
 		const instrument = this.createInstrument(extensions, options.instrument);
 
 		let createOptions: NestApplicationOptions = {
@@ -96,7 +105,7 @@ class Forge {
 
 	public async createApplicationContext(appModule: IEntryNestModule, options: ForgeApplicationContextOptions) {
 		const extensions = this.discoverExtensions(options?.extensions ?? []);
-		const root = this.createRootModule(appModule, extensions, options);
+		const root = await this.createRootModule({ imports: [appModule as any] }, extensions, options);
 		const instrument = this.createInstrument(extensions, options.instrument);
 
 		let createOptions: NestApplicationContextOptions = {
@@ -135,7 +144,7 @@ class Forge {
 
 	public async createMicroservice<T extends object>(appModule: IEntryNestModule, options: ForgeMicroserviceOptions & T) {
 		const extensions = this.discoverExtensions(options?.extensions ?? []);
-		const root = this.createRootModule(appModule, extensions, options);
+		const root = await this.createRootModule({ imports: [appModule as any] }, extensions, options);
 		const instrument = this.createInstrument(extensions, options.instrument);
 
 		let createOptions: NestMicroserviceOptions & T = {
@@ -163,6 +172,46 @@ class Forge {
 		for (const extension of extensions) {
 			await extension.configureMicroserviceApplication(app);
 		}
+
+		return app;
+	}
+
+	public async createTestingModule(metadata: ForgeTestModuleOptions, options?: TestingModuleOptions): Promise<TestingModuleBuilder> {
+		const extensions = this.discoverExtensions(metadata?.extensions ?? []);
+		const root = await this.createRootModule(metadata, extensions, options);
+		const instrument = this.createInstrument(extensions);
+
+		let createOptions: TestingModuleOptions & { instrument: any } = {
+			...options,
+			instrument: {
+				instanceDecorator: instrument.instanceDecorator,
+			},
+		};
+
+		// for (const extension of extensions) {
+		// 	const newOptions = await extension.configureMicroserviceApplicationOptions(createOptions);
+
+		// 	if (typeof newOptions === 'object' && newOptions !== null) {
+		// 		createOptions = newOptions as typeof createOptions;
+		// 	}
+		// }
+
+		this._augmentBootHooks(createOptions, extensions);
+		this._augmentTestInjector();
+		this._augmentNestApplication();
+
+		const app = Test.createTestingModule(
+			{
+				imports: [root],
+			},
+			createOptions
+		);
+
+		app[FORGE_PATCH_INSTRUMENT] = instrument.instanceDecorator;
+
+		// for (const extension of extensions) {
+		// 	await extension.configureMicroserviceApplication(app);
+		// }
 
 		return app;
 	}
@@ -207,12 +256,12 @@ class Forge {
 		throw new Error(`Unsupported extension resolvable "${String(resolvable)}"`);
 	}
 
-	protected async createRootModule(appModule: IEntryNestModule, extensions: ForgeExtension[], options: any) {
+	protected async createRootModule(metadata: ModuleMetadata, extensions: ForgeExtension[], options: any) {
 		const meta: ModuleMetadata = {
 			imports: [],
-			controllers: [],
-			providers: [],
-			exports: [],
+			controllers: metadata?.controllers ?? [],
+			providers: metadata?.providers ?? [],
+			exports: metadata?.exports ?? [],
 		};
 
 		for (const extension of extensions) {
@@ -224,7 +273,9 @@ class Forge {
 			meta.exports!.push(...extensionMeta.exports);
 		}
 
-		meta.imports!.push(appModule as any);
+		if (metadata?.imports) {
+			meta.imports!.push(...(metadata.imports as any));
+		}
 
 		@Module(meta)
 		@Global()
@@ -286,6 +337,10 @@ class Forge {
 		return {
 			instances,
 			instanceDecorator: (instance) => {
+				if (instance === undefined) {
+					return;
+				}
+
 				if (this._isRootModule(instance)) {
 					// TODO
 				}
@@ -392,6 +447,28 @@ class Forge {
 			}
 
 			return originalInit.call(this);
+		};
+	}
+
+	protected _augmentTestInjector() {
+		const tester = TestingModuleBuilder as any;
+
+		if (tester.prototype[FORGE_PATCHED]) {
+			return;
+		}
+
+		tester.prototype[FORGE_PATCHED] = true;
+		tester.prototype.createInstancesOfDependencies = async function (
+			graphInspector: GraphInspector,
+			options: NestApplicationContextOptions
+		) {
+			const injector = new TestingInjector({
+				preview: options?.preview ?? false,
+				instanceDecorator: this[FORGE_PATCH_INSTRUMENT],
+			});
+
+			const instanceLoader = new TestingInstanceLoader(this.container, injector, graphInspector);
+			await instanceLoader.createInstancesOfDependencies(this.container.getModules(), this.mocker);
 		};
 	}
 }
