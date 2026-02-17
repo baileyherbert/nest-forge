@@ -10,6 +10,7 @@ import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from '
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
 import { AbstractHttpAdapter } from '@nestjs/core';
+import { TestingModuleBuilder, TestingModuleOptions } from '@nestjs/testing';
 
 export abstract class ForgeExtension {
 	/**
@@ -60,6 +61,18 @@ export abstract class ForgeExtension {
 	): NestMicroserviceOptions | Promise<NestMicroserviceOptions> {
 		return options;
 	}
+
+	/**
+	 * Configures the options object for a Nest testing module.
+	 */
+	public configureTestingModuleOptions(options: TestingModuleOptions): TestingModuleOptions | Promise<TestingModuleOptions> {
+		return options;
+	}
+
+	/**
+	 * Configures a testing module builder immediately after it has been instantiated.
+	 */
+	public configureTestingModuleBuilder(builder: TestingModuleBuilder): any {}
 
 	/**
 	 * Configures the root module of the application.

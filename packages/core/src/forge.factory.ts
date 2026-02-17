@@ -181,20 +181,17 @@ class Forge {
 		const root = await this.createRootModule(metadata, extensions, options);
 		const instrument = this.createInstrument(extensions);
 
-		let createOptions: TestingModuleOptions & { instrument: any } = {
+		let createOptions: TestingModuleOptions = {
 			...options,
-			instrument: {
-				instanceDecorator: instrument.instanceDecorator,
-			},
 		};
 
-		// for (const extension of extensions) {
-		// 	const newOptions = await extension.configureMicroserviceApplicationOptions(createOptions);
+		for (const extension of extensions) {
+			const newOptions = await extension.configureTestingModuleOptions(createOptions);
 
-		// 	if (typeof newOptions === 'object' && newOptions !== null) {
-		// 		createOptions = newOptions as typeof createOptions;
-		// 	}
-		// }
+			if (typeof newOptions === 'object' && newOptions !== null) {
+				createOptions = newOptions as typeof createOptions;
+			}
+		}
 
 		this._augmentBootHooks(createOptions, extensions);
 		this._augmentTestInjector();
@@ -209,9 +206,9 @@ class Forge {
 
 		app[FORGE_PATCH_INSTRUMENT] = instrument.instanceDecorator;
 
-		// for (const extension of extensions) {
-		// 	await extension.configureMicroserviceApplication(app);
-		// }
+		for (const extension of extensions) {
+			await extension.configureTestingModuleBuilder(app);
+		}
 
 		return app;
 	}
