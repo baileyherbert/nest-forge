@@ -12,11 +12,11 @@
 		"experimentalDecorators": true,
 		"useUnknownInCatchVariables": false,
 		"target": "ES2024",
-		"sourceMap": false,
+		"sourceMap": true,
+		"inlineSources": true,
 		"allowJs": false,
 		"outDir": "./dist",
 		"forceConsistentCasingInFileNames": true,
-		"strictPropertyInitialization": false,
 		"stripInternal": true,
 		"strict": true
 	},

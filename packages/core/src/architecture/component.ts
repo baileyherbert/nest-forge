@@ -7,7 +7,7 @@ export abstract class ForgeBaseComponent {
 	 * @internal
 	 */
 	@Inject(ModuleRef)
-	public [FORGE_FIELD_MODULE_REF]: ModuleRef;
+	public [FORGE_FIELD_MODULE_REF]!: ModuleRef;
 
 	protected onModuleInit(): any {}
 	protected onApplicationBootstrap(): any {}
