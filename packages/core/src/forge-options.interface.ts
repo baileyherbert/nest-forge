@@ -1,5 +1,5 @@
 import { ModuleMetadata, NestApplicationOptions } from '@nestjs/common';
-import { ForgeExtensionResolvable } from './extensions';
+import { ForgeExtensionResolvable } from './extensions/index.js';
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
 

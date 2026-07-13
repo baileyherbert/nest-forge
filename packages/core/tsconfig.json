@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
 		"declaration": true,
 		"noImplicitAny": false,
 		"skipLibCheck": true,
@@ -15,6 +16,7 @@
 		"sourceMap": true,
 		"inlineSources": true,
 		"allowJs": false,
+		"rootDir": "./src",
 		"outDir": "./dist",
 		"forceConsistentCasingInFileNames": true,
 		"stripInternal": true,

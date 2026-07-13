@@ -15,8 +15,8 @@ import {
 	ForgeApplicationOptions,
 	ForgeMicroserviceOptions,
 	ForgeTestModuleOptions,
-} from './forge-options.interface';
-import { ForgeExtension, ForgeExtensionResolvable } from './extensions';
+} from './forge-options.interface.js';
+import { ForgeExtension, ForgeExtensionResolvable } from './extensions/index.js';
 import { AbstractHttpAdapter, GraphInspector, ModuleRef, NestApplicationContext, NestFactory } from '@nestjs/core';
 import {
 	FORGE_FIELD_MODULE_REF,
@@ -25,14 +25,14 @@ import {
 	FORGE_PATCH_INSTRUMENT,
 	FORGE_PATCHED,
 	FORGE_TOKEN_ROOT_MODULE,
-} from './constants';
-import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from './architecture';
+} from './constants.js';
+import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from './architecture/index.js';
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
-import { FORGE_APP_OPTIONS, FORGE_ROOT_MODULE } from './constants-public';
+import { FORGE_APP_OPTIONS, FORGE_ROOT_MODULE } from './constants-public.js';
 import { Test, TestingModuleBuilder, TestingModuleOptions } from '@nestjs/testing';
-import { TestingInjector } from '@nestjs/testing/testing-injector';
-import { TestingInstanceLoader } from '@nestjs/testing/testing-instance-loader';
+import { TestingInjector } from '@nestjs/testing/testing-injector.js';
+import { TestingInstanceLoader } from '@nestjs/testing/testing-instance-loader.js';
 
 class Forge {
 	private _augmented = new Set<ForgeBaseComponent>();

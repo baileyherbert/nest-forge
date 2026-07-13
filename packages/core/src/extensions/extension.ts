@@ -6,7 +6,7 @@ import {
 	ModuleMetadata,
 	NestApplicationOptions,
 } from '@nestjs/common';
-import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from '../architecture';
+import { ForgeBaseComponent, ForgeController, ForgeModule, ForgeService } from '../architecture/index.js';
 import { NestApplicationContextOptions } from '@nestjs/common/interfaces/nest-application-context-options.interface';
 import { NestMicroserviceOptions } from '@nestjs/common/interfaces/microservices/nest-microservice-options.interface';
 import { AbstractHttpAdapter } from '@nestjs/core';

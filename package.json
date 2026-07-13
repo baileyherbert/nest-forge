@@ -2,6 +2,9 @@
 	"name": "nest-forge",
 	"version": "0.0.0",
 	"private": true,
+	"devDependencies": {
+		"@nestjs/platform-express": "^12.0.0-alpha.5"
+	},
 	"workspaces": [
 		"packages/*",
 		"tests/*"

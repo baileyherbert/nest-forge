@@ -1,5 +1,5 @@
 import { Inject } from '@nestjs/common';
-import { FORGE_FIELD_MODULE_REF } from '../constants';
+import { FORGE_FIELD_MODULE_REF } from '../constants.js';
 import { ModuleRef } from '@nestjs/core';
 
 export abstract class ForgeBaseComponent {

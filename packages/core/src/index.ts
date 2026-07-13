@@ -1,6 +1,6 @@
-export * from './forge.factory';
-export * from './forge-options.interface';
+export * from './forge.factory.js';
+export * from './forge-options.interface.js';
 
-export * from './extensions';
-export * from './architecture';
-export * from './constants-public';
+export * from './extensions/index.js';
+export * from './architecture/index.js';
+export * from './constants-public.js';

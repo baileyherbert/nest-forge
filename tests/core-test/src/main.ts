@@ -1,6 +1,6 @@
 import { Forge } from '@nest-forge/core';
-import { AppModule } from './app.module';
-import { LifecycleExtension } from './extensions/lifecycle.extension';
+import { AppModule } from './app.module.js';
+import { LifecycleExtension } from './extensions/lifecycle.extension.js';
 
 async function bootstrap() {
 	const app = await Forge.create(AppModule, {

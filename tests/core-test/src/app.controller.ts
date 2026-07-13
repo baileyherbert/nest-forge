@@ -1,6 +1,6 @@
 import { ForgeController } from '@nest-forge/core';
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { AppService } from './app.service.js';
 
 @Controller()
 export class AppController extends ForgeController {
